@@ -6,7 +6,7 @@ export class DirectoryPage {
   readonly employeeNameInput: Locator;
   readonly searchButton: Locator;
   readonly employeeCard: Locator;
-  readonly noRecordsMessage: Locator;
+  readonly resetButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -14,46 +14,64 @@ export class DirectoryPage {
     this.employeeNameInput = page.locator('.oxd-autocomplete-text-input input');
     this.searchButton = page.locator('button[type="submit"]:has-text("Search")');
     this.employeeCard = page.locator('.orangehrm-directory-card');
-    this.noRecordsMessage = page.locator('.oxd-toast--info, .orangehrm-horizontal-padding:has-text("No Records Found")');
+    this.resetButton = page.locator('button:has-text("Reset")');
   }
 
   async navigateToDirectory(): Promise<void> {
     await this.directoryMenu.click();
     await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(1000);
   }
 
   async searchEmployee(employeeName: string): Promise<void> {
+    // Limpiar búsqueda anterior
+    await this.resetButton.click().catch(() => {});
+    await this.page.waitForTimeout(500);
+    
     await this.employeeNameInput.fill(employeeName);
+    await this.page.waitForTimeout(2000);
     
-    // Esperar a que aparezca el dropdown de autocompletado
-    await this.page.waitForTimeout(1000);
-    
-    // Seleccionar la primera opción del dropdown si existe
+    // Verificar si aparece el dropdown con opciones
     const autocompleteOption = this.page.locator('.oxd-autocomplete-dropdown .oxd-autocomplete-option').first();
     
-    if (await autocompleteOption.isVisible()) {
+    if (await autocompleteOption.isVisible({ timeout: 3000 }).catch(() => false)) {
       await autocompleteOption.click();
+      await this.page.waitForTimeout(500);
     }
     
     await this.searchButton.click();
     await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(1500);
   }
 
   async isEmployeeDisplayed(): Promise<boolean> {
-    await this.page.waitForTimeout(2000);
-    return await this.employeeCard.first().isVisible();
+    // Verificar si hay tarjetas de empleado visibles
+    const cards = await this.employeeCard.count();
+    return cards > 0;
   }
 
-  async getEmployeeCardInfo(): Promise<{ name: string }> {
-    const nameElement = this.employeeCard.first().locator('.orangehrm-directory-card-header');
-    const name = await nameElement.textContent() || '';
-    return { name: name.trim() };
+  async getEmployeeCards(): Promise<number> {
+    return await this.employeeCard.count();
   }
 
-  async validateEmployeeInfo(expectedFirstName: string, expectedLastName: string): Promise<boolean> {
-    const cardInfo = await this.getEmployeeCardInfo();
-    const fullName = cardInfo.name.toLowerCase();
-    return fullName.includes(expectedFirstName.toLowerCase()) && 
-           fullName.includes(expectedLastName.toLowerCase());
+  async validateEmployeeInResults(firstName: string, lastName: string): Promise<boolean> {
+    const cards = await this.employeeCard.all();
+    
+    for (const card of cards) {
+      const cardText = await card.textContent() || '';
+      if (cardText.toLowerCase().includes(firstName.toLowerCase()) && 
+          cardText.toLowerCase().includes(lastName.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async getRecordsCount(): Promise<string> {
+    const recordsText = this.page.locator('span:has-text("Records Found")');
+    if (await recordsText.isVisible({ timeout: 3000 }).catch(() => false)) {
+      return await recordsText.textContent() || '0';
+    }
+    return '0';
   }
 }

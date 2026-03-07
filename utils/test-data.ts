@@ -7,9 +7,9 @@ export const TestData = {
 
   // Datos del empleado para crear
   employee: {
-    firstName: 'Juan',
-    middleName: 'Carlos',
-    lastName: 'Automation',
+    firstName: 'Lennin',
+    middleName: 'Alexander',
+    lastName: 'Martinez',
     // Genera nombre único para evitar duplicados
     getUniqueFirstName: () => `Test${Date.now().toString().slice(-6)}`,
     getUniqueLastName: () => `Auto${Date.now().toString().slice(-4)}`

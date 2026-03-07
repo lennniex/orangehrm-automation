@@ -42,35 +42,107 @@ export class PIMPage {
     await this.lastNameInput.fill(lastName);
   }
 
+  async setUniqueEmployeeId(): Promise<string> {
+    const uniqueId = `${Date.now().toString().slice(-6)}`;
+    const employeeIdField = this.page.locator('.oxd-grid-item:has-text("Employee Id") input');
+    
+    await employeeIdField.waitFor({ state: 'visible' });
+    await employeeIdField.clear();
+    await employeeIdField.fill(uniqueId);
+    
+    console.log(`📝 Employee ID generado: ${uniqueId}`);
+    return uniqueId;
+  }
+
   async uploadProfilePhoto(photoPath: string): Promise<void> {
     const absolutePath = path.resolve(photoPath);
     await this.profilePicture.setInputFiles(absolutePath);
+    await this.page.waitForTimeout(1000);
   }
 
   async saveEmployee(): Promise<void> {
     await this.saveButton.first().click();
+    await this.page.waitForTimeout(2000);
+    
+    // Verificar error de ID duplicado
+    const errorMessage = this.page.locator('.oxd-input-field-error-message');
+    if (await errorMessage.isVisible().catch(() => false)) {
+      console.log('⚠️ Error detectado, reintentando con nuevo ID...');
+      await this.setUniqueEmployeeId();
+      await this.saveButton.first().click();
+      await this.page.waitForTimeout(2000);
+    }
+    
     await this.page.waitForLoadState('networkidle');
   }
 
-  async addNewEmployee(
-    firstName: string,
-    middleName: string,
-    lastName: string,
-    photoPath?: string
-  ): Promise<void> {
-    await this.clickAddEmployee();
+  // NUEVO: Asignar Job Title para que aparezca en Directory
+  async assignJobDetails(): Promise<void> {
+    console.log('📝 Asignando Job Details al empleado...');
     
-    if (photoPath) {
-      await this.uploadProfilePhoto(photoPath);
+    // Click en la pestaña "Job"
+    const jobTab = this.page.locator('a:has-text("Job")');
+    await jobTab.click();
+    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(1000);
+
+    // Seleccionar Job Title
+    const jobTitleDropdown = this.page.locator('.oxd-grid-item:has-text("Job Title")').locator('.oxd-select-text');
+    await jobTitleDropdown.click();
+    await this.page.waitForTimeout(500);
+    
+    // Seleccionar primera opción disponible (que no sea "-- Select --")
+    const jobOptions = this.page.locator('.oxd-select-dropdown .oxd-select-option');
+    const optionCount = await jobOptions.count();
+    if (optionCount > 1) {
+      await jobOptions.nth(1).click(); // Seleccionar segunda opción (primera es "-- Select --")
     }
+    await this.page.waitForTimeout(500);
+
+    // Seleccionar Location
+    const locationDropdown = this.page.locator('.oxd-grid-item:has-text("Location")').locator('.oxd-select-text');
+    await locationDropdown.click();
+    await this.page.waitForTimeout(500);
     
-    await this.fillEmployeeDetails(firstName, middleName, lastName);
-    await this.saveEmployee();
+    const locationOptions = this.page.locator('.oxd-select-dropdown .oxd-select-option');
+    const locationCount = await locationOptions.count();
+    if (locationCount > 1) {
+      await locationOptions.nth(1).click();
+    }
+    await this.page.waitForTimeout(500);
+
+    // Guardar cambios
+    await this.saveButton.first().click();
+    await this.page.waitForTimeout(2000);
+    
+    // Verificar toast de éxito
+    const successToast = this.page.locator('.oxd-toast--success');
+    if (await successToast.isVisible({ timeout: 5000 }).catch(() => false)) {
+      console.log('✅ Job Details asignados correctamente');
+    }
   }
 
-  async getEmployeeId(): Promise<string> {
-    await this.page.waitForSelector('.oxd-grid-item:has-text("Employee Id") input');
-    const employeeIdInput = this.page.locator('.oxd-grid-item:has-text("Employee Id") input').first();
-    return await employeeIdInput.inputValue();
+  // Buscar empleado en la lista de PIM
+  async searchEmployeeInPIM(employeeName: string): Promise<boolean> {
+    await this.navigateToPIM();
+    
+    const searchInput = this.page.locator('.oxd-autocomplete-text-input input').first();
+    await searchInput.fill(employeeName);
+    await this.page.waitForTimeout(1500);
+    
+    // Seleccionar del dropdown si aparece
+    const autocompleteOption = this.page.locator('.oxd-autocomplete-dropdown .oxd-autocomplete-option').first();
+    if (await autocompleteOption.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await autocompleteOption.click();
+    }
+    
+    // Click en Search
+    const searchButton = this.page.locator('button[type="submit"]:has-text("Search")');
+    await searchButton.click();
+    await this.page.waitForTimeout(2000);
+    
+    // Verificar si aparece en los resultados
+    const employeeRow = this.page.locator('.oxd-table-body .oxd-table-row');
+    return await employeeRow.first().isVisible();
   }
 }
