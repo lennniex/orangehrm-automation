@@ -7,8 +7,8 @@ import * as fs from 'fs';
 // Generar datos únicos para cada ejecución
 const generateUniqueData = () => {
   const timestamp = Date.now().toString().slice(-6);
-  const names = ['Juan', 'Maria', 'Carlos', 'Ana', 'Pedro', 'Laura', 'Diego', 'Sofia'];
-  const lastNames = ['Garcia', 'Lopez', 'Martinez', 'Rodriguez', 'Hernandez', 'Gonzalez'];
+  const names = ['Lennin','Juan', 'Maria', 'Carlos', 'Ana', 'Pedro', 'Laura', 'Diego', 'Sofia'];
+  const lastNames = ['Martinez','Garcia', 'Lopez', 'Perez', 'Rodriguez', 'Hernandez', 'Gonzalez', 'Cubillos', 'Sanchez'];
   
   const randomName = names[Math.floor(Math.random() * names.length)];
   const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
