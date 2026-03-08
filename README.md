@@ -32,6 +32,8 @@ Proyecto completo de automatización de pruebas para OrangeHRM que incluye:
 | **Performance** | K6 | JavaScript, ligero, métricas nativas |
 | **CI/CD** | GitHub Actions | Integración nativa, gratuito |
 
+> **Nota:** npm es el equivalente a Maven en el ecosistema Node.js/TypeScript. Ambos son gestores de dependencias y sistemas de build. `npm ci` equivale a `mvn clean install`.
+
 ---
 
 ## 📁 Estructura del Proyecto
@@ -88,7 +90,7 @@ npx playwright install
 
 ---
 
-## ▶️ Ejecución de Pruebas
+## ▶️ Ejecución de Pruebas Locales
 
 ### 🎭 RETO 1: Tests E2E
 
@@ -129,11 +131,57 @@ k6 run tests/performance/login-load-test.js
 k6 run tests/performance/employee-stress-test.js
 ```
 
-### 🔄 RETO 4: Pipeline CI/CD
+---
 
-El pipeline se ejecuta automáticamente en cada push a GitHub.
+## 🔄 RETO 4: Ejecución de Pipeline CI/CD (GitHub Actions)
 
-Ver resultados en: **Actions** → **OrangeHRM Automation Tests**
+El pipeline está configurado en `.github/workflows/playwright.yml` y contiene **4 Jobs**:
+
+| Job | Nombre | Función | Artefactos |
+|-----|--------|---------|------------|
+| 1 | 🎭 E2E Tests | Pruebas de interfaz Playwright | playwright-report-e2e |
+| 2 | 🔌 API Tests | Pruebas de endpoints | playwright-report-api |
+| 3 | ⚡ Performance | Pruebas K6 (50 usuarios, 5 min) | performance-reports |
+| 4 | 📋 Resumen | Consolidar resultados | GitHub Summary |
+
+### 🅰️ Opción A: Ejecución Automática
+
+El pipeline se ejecuta automáticamente en cada push a la rama `main`:
+
+```bash
+git add .
+git commit -m "ci: Trigger pipeline"
+git push
+```
+
+Luego ir a **GitHub → Actions** para ver la ejecución.
+
+### 🅱️ Opción B: Ejecución Manual desde GitHub
+
+1. Ir a: https://github.com/lennniex/orangehrm-automation
+2. Click en pestaña **Actions** (menú superior)
+3. En la lista izquierda, click en **"OrangeHRM Automation Tests"**
+4. Click en botón **"Run workflow"** (derecha)
+5. Seleccionar rama **"main"**
+6. Click en botón verde **"Run workflow"**
+7. Esperar ~5-10 minutos a que terminen los 4 jobs
+
+### 📊 Ver Resultados del Pipeline
+
+1. En la pestaña **Actions**, click en el workflow ejecutado
+2. Verás los 4 jobs con su estado (✓ verde = passed, ✗ rojo = failed)
+3. Click en cualquier job para ver los logs detallados
+4. Scroll down hasta **"Artifacts"** para descargar reportes
+
+### 📦 Artefactos Generados
+
+| Artefacto | Contenido | Cómo Usar |
+|-----------|-----------|-----------|
+| playwright-report-e2e | Reporte HTML E2E | Descargar ZIP, extraer, abrir index.html |
+| test-screenshots | Screenshots de fallos | Evidencia visual de errores |
+| playwright-report-api | Reporte HTML API | Descargar ZIP, extraer, abrir index.html |
+| api-responses | Respuestas JSON | Datos guardados de cada endpoint |
+| performance-reports | Resultados K6 | Métricas JSON de performance |
 
 ---
 
@@ -212,7 +260,7 @@ git add .
 # Crear commit
 git commit -m "feat: descripción del cambio"
 
-# Subir a GitHub
+# Subir a GitHub (dispara el pipeline automáticamente)
 git push
 
 # Resumen (todos juntos)
@@ -235,7 +283,7 @@ git add . && git commit -m "mensaje" && git push
 
 **Lennin Alexander Martínez**
 
-QA Automation Engineer | 7+ años de experiencia
+QA Automation Engineer | 7+ años de experiencia | Certificado ITIL® Foundation
 
 ### Experiencia Relevante
 
