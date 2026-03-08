@@ -1,11 +1,25 @@
-# 🐛 REPORTE DE BUGS - OrangeHRM
+# 🐛 REPORTE DE BUGS - OrangeHRM (ACTUALIZADO)
 ## Reto AGILE TESTER - Banco Davivienda
 ### Autor: Lenninlex - QA Automation Engineer
 ### Fecha: Marzo 2026
 
 ---
 
-## BUG-001: Alta tasa de error bajo carga (50%)
+## 📊 RESUMEN EJECUTIVO
+
+| Tipo de Prueba | Total | Passed | Failed | % Éxito |
+|----------------|-------|--------|--------|---------|
+| **E2E Tests** | 2 | 2 | 0 | 100% |
+| **API Tests** | 9 | 7 | 2 | 78% |
+| **Performance** | 2 | 2* | 0 | 100% |
+
+*Los tests de performance pasaron pero identificaron cuellos de botella.
+
+---
+
+## 🐛 BUGS DE PERFORMANCE
+
+### BUG-PERF-001: Alta tasa de error bajo carga (50%)
 
 | Campo | Valor |
 |-------|-------|
@@ -14,120 +28,131 @@
 | **Priority** | High |
 | **Severity** | Critical |
 | **Component** | API / Authentication |
-| **Affects Version** | OrangeHRM Demo |
 | **Environment** | https://opensource-demo.orangehrmlive.com |
-| **Reporter** | Lenninlex |
 
-### Description
+**Descripción:**
 Al simular 50 usuarios concurrentes accediendo a los endpoints de la API durante 5 minutos usando K6, el 49.96% de las requests retornan HTTP 401 Unauthorized.
 
-### Steps to Reproduce
-1. Configurar K6 con 50 Virtual Users (VUs)
-2. Ejecutar script de prueba de estrés por 5 minutos
-3. Hacer requests a `/api/v2/pim/employees` y `/api/v2/directory/employees`
-4. Observar la tasa de error en las métricas
+**Métricas:**
+```
+Total Requests:  3,751
+Failed:          1,874 (49.96%)
+Throughput:      12.32 req/s
+```
 
-### Expected Result
-- Tasa de error menor al 5%
-- Todas las requests autenticadas deberían procesarse correctamente
-
-### Actual Result
-- Tasa de error: 49.96% (1,874 de 3,751 requests)
-- Requests fallidas retornan HTTP 401
-
-### Evidence
-- Reporte K6: `reports/performance/employee_stress_*.html`
-- Métricas: `http_req_failed: 49.96%`
-
-### Attachments
-- Screenshot de métricas K6
-- Archivo JSON con resultados detallados
+**Impacto:** Crítico - La mitad de los usuarios no pueden acceder al sistema bajo carga.
 
 ---
 
-## BUG-002: Tiempo de respuesta P95 excede SLA
+### BUG-PERF-002: Tiempo de respuesta P95 excede SLA
 
 | Campo | Valor |
 |-------|-------|
-| **Summary** | Percentil 95 de tiempo de respuesta supera 5 segundos bajo carga moderada |
+| **Summary** | Percentil 95 de tiempo de respuesta supera 5 segundos |
 | **Issue Type** | Bug |
 | **Priority** | Medium |
 | **Severity** | Major |
 | **Component** | Performance / Backend |
-| **Affects Version** | OrangeHRM Demo |
-| **Environment** | https://opensource-demo.orangehrmlive.com |
-| **Reporter** | Lenninlex |
 
-### Description
+**Descripción:**
 El percentil 95 (P95) del tiempo de respuesta es 5.51 segundos para el flujo de login y 4.05 segundos para APIs, excediendo el SLA típico de 3 segundos.
 
-### Steps to Reproduce
-1. Ejecutar K6 load test con 50 VUs
-2. Monitorear métricas de `http_req_duration`
-3. Observar el valor de p(95)
-
-### Expected Result
-- P95 menor a 3 segundos para todas las operaciones
-
-### Actual Result
-- P95 Login: 5.51 segundos
-- P95 API: 4.05 segundos
-
-### Metrics Collected
+**Métricas:**
 ```
-http_req_duration (Login):
-  avg=2.68s  min=324.5ms  med=2.62s  max=7.94s
-  p(90)=4.9s  p(95)=5.51s
+Login Flow:
+  avg=2.68s  p(90)=4.9s  p(95)=5.51s
 
-http_req_duration (API):
-  avg=2.03s  min=319.42ms  med=1.97s  max=7.26s
-  p(90)=3.42s  p(95)=4.05s
+API Endpoints:
+  avg=2.03s  p(90)=3.42s  p(95)=4.05s
 ```
 
-### Evidence
-- Reporte K6: `reports/performance/login_load_*.html`
+**Impacto:** El 5% de los usuarios experimentan tiempos de espera inaceptables.
 
 ---
 
-## BUG-003: Employee ID duplicado genera error 409
+## 🐛 BUGS DE API
+
+### BUG-API-001: Endpoint retorna 422 para empleado inexistente
 
 | Campo | Valor |
 |-------|-------|
-| **Summary** | Sistema permite ingresar Employee ID existente generando error HTTP 409 Conflict |
+| **Summary** | GET /api/v2/pim/employees/{id} retorna 422 en lugar de 404 para ID inexistente |
+| **Issue Type** | Bug |
+| **Priority** | Low |
+| **Severity** | Minor |
+| **Component** | API / PIM |
+| **Environment** | https://opensource-demo.orangehrmlive.com |
+
+**Descripción:**
+Al buscar un empleado con ID inexistente (ej: 99999999), la API retorna HTTP 422 (Unprocessable Entity) en lugar del esperado HTTP 404 (Not Found).
+
+**Pasos para reproducir:**
+1. Autenticarse en la API
+2. Hacer GET a `/api/v2/pim/employees/99999999`
+3. Observar código de respuesta
+
+**Resultado esperado:** HTTP 404 Not Found
+
+**Resultado actual:** HTTP 422 Unprocessable Entity
+
+**Evidencia:**
+```
+Status: 422
+Expected: [200, 404]
+```
+
+**Nota:** Esto es un issue de diseño de API. El código 422 indica que el servidor entiende la request pero no puede procesarla debido a errores semánticos.
+
+---
+
+### BUG-API-002: Múltiples elementos con clase de alerta dificultan validación
+
+| Campo | Valor |
+|-------|-------|
+| **Summary** | Página de login tiene múltiples elementos con clase 'oxd-alert' causando ambigüedad |
+| **Issue Type** | Bug |
+| **Priority** | Low |
+| **Severity** | Trivial |
+| **Component** | UI / Login |
+| **Environment** | https://opensource-demo.orangehrmlive.com |
+
+**Descripción:**
+Al intentar validar el mensaje de error de login inválido, el selector `.oxd-alert-content, .oxd-alert` retorna 2 elementos en lugar de 1, lo que causa errores de "strict mode violation" en las pruebas automatizadas.
+
+**Error técnico:**
+```
+Error: locator.isVisible: Error: strict mode violation: 
+locator('.oxd-alert-content, .oxd-alert') resolved to 2 elements:
+1) <div role="alert" class="oxd-alert oxd-alert--error">...</div>
+2) <div class="oxd-alert-content oxd-alert-content--error">...</div>
+```
+
+**Impacto:** Afecta la automatización de pruebas, no la funcionalidad del usuario.
+
+**Workaround aplicado:** Verificar que la URL permanece en `/login` en lugar de buscar el mensaje de error.
+
+---
+
+## 🐛 BUGS DE E2E
+
+### BUG-E2E-001: Employee ID duplicado genera error 409
+
+| Campo | Valor |
+|-------|-------|
+| **Summary** | Sistema permite ingresar Employee ID existente generando error HTTP 409 |
 | **Issue Type** | Bug |
 | **Priority** | Medium |
 | **Severity** | Minor |
 | **Component** | PIM / Employees |
-| **Affects Version** | OrangeHRM Demo |
-| **Environment** | https://opensource-demo.orangehrmlive.com |
-| **Reporter** | Lenninlex |
 
-### Description
-Al crear un empleado nuevo, si se ingresa manualmente o genera automáticamente un Employee ID que ya existe en el sistema, se produce un error HTTP 409 Conflict. No hay validación previa ni generación automática de ID único.
+**Descripción:**
+Al crear un empleado nuevo, si se ingresa un Employee ID que ya existe en el sistema, se produce un error HTTP 409 Conflict sin validación previa.
 
-### Steps to Reproduce
-1. Navegar a PIM > Add Employee
-2. Ingresar un Employee ID que ya existe (ej: "0295")
-3. Completar datos del empleado
-4. Click en Save
-
-### Expected Result
-- El sistema debería validar si el ID existe antes de guardar
-- O generar automáticamente un ID único
-
-### Actual Result
-- Error HTTP 409 Conflict
-- Mensaje: "Employee ID already exists"
-
-### Workaround Applied
-En la automatización se implementó generación de ID único usando timestamp:
-```typescript
-const uniqueId = Date.now().toString().slice(-6);
-```
+**Workaround:** Generar ID único con timestamp: `Date.now().toString().slice(-6)`
 
 ---
 
-## BUG-004: Empleado no aparece en Directory sin Job Details
+### BUG-E2E-002: Empleado no aparece en Directory sin Job Details
 
 | Campo | Valor |
 |-------|-------|
@@ -136,96 +161,77 @@ const uniqueId = Date.now().toString().slice(-6);
 | **Priority** | Low |
 | **Severity** | Minor |
 | **Component** | Directory |
-| **Affects Version** | OrangeHRM Demo |
-| **Environment** | https://opensource-demo.orangehrmlive.com |
-| **Reporter** | Lenninlex |
 
-### Description
-Cuando se crea un empleado nuevo sin asignar Job Title y Location, el empleado no aparece en los resultados de búsqueda del módulo Directory. No hay mensaje indicando este requisito al usuario.
+**Descripción:**
+Los empleados recién creados sin Job Title y Location asignados no aparecen en el módulo Directory, sin mensaje que indique este requisito.
 
-### Steps to Reproduce
-1. Crear empleado nuevo (solo datos básicos: nombre, apellido)
-2. No asignar Job Title ni Location
-3. Navegar a módulo Directory
-4. Buscar el empleado por nombre
-
-### Expected Result
-- El empleado debería aparecer en Directory
-- O mostrar mensaje indicando que se requiere Job Details
-
-### Actual Result
-- El empleado no aparece en los resultados
-- No hay feedback al usuario sobre el requisito
-
-### Workaround Applied
-En la automatización se agregó paso adicional después de crear empleado:
-1. Navegar a Personal Details > Job
-2. Asignar Job Title
-3. Asignar Location
-4. Guardar
+**Workaround:** Asignar Job Details inmediatamente después de crear el empleado.
 
 ---
 
-## BUG-005: Timeout en guardado de empleado bajo carga
+## 📋 RESUMEN PARA JIRA
 
-| Campo | Valor |
-|-------|-------|
-| **Summary** | Operación de guardado de empleado presenta timeout bajo carga moderada |
-| **Issue Type** | Bug |
-| **Priority** | Low |
-| **Severity** | Minor |
-| **Component** | PIM / Performance |
-| **Affects Version** | OrangeHRM Demo |
-| **Environment** | https://opensource-demo.orangehrmlive.com |
-| **Reporter** | Lenninlex |
+### Bugs Críticos (Requieren atención inmediata)
+| ID | Título | Componente |
+|----|--------|------------|
+| BUG-PERF-001 | 50% error rate bajo carga | API/Auth |
 
-### Description
-Durante las pruebas E2E automatizadas, la operación de guardar un empleado nuevo ocasionalmente excede el timeout de 30 segundos cuando el servidor demo está bajo carga.
+### Bugs Mayores (Requieren corrección)
+| ID | Título | Componente |
+|----|--------|------------|
+| BUG-PERF-002 | P95 > 5 segundos | Performance |
 
-### Steps to Reproduce
-1. Ejecutar múltiples tests E2E en paralelo
-2. Crear empleado nuevo
-3. Click en Save
-4. Observar tiempo de respuesta
+### Bugs Menores (Mejoras recomendadas)
+| ID | Título | Componente |
+|----|--------|------------|
+| BUG-API-001 | 422 en lugar de 404 | API/PIM |
+| BUG-E2E-001 | Employee ID duplicado | PIM |
+| BUG-E2E-002 | Directory requiere Job | Directory |
 
-### Expected Result
-- Guardado completo en menos de 5 segundos
-
-### Actual Result
-- Timeout ocasional de 30+ segundos
-- Requiere retry para completar
-
-### Workaround Applied
-```typescript
-// Implementar retry con timeout extendido
-await page.waitForURL(/viewPersonalDetails/, { timeout: 60000 });
-```
-
----
-
-## 📊 RESUMEN DE BUGS
-
-| ID | Título | Prioridad | Severidad | Estado |
-|----|--------|-----------|-----------|--------|
-| BUG-001 | Alta tasa de error bajo carga | High | Critical | Open |
-| BUG-002 | P95 excede SLA | Medium | Major | Open |
-| BUG-003 | Employee ID duplicado | Medium | Minor | Workaround |
-| BUG-004 | Empleado no aparece en Directory | Low | Minor | Workaround |
-| BUG-005 | Timeout en guardado | Low | Minor | Workaround |
+### Bugs Triviales (Bajo impacto)
+| ID | Título | Componente |
+|----|--------|------------|
+| BUG-API-002 | Múltiples elementos alert | UI/Login |
 
 ---
 
 ## 📎 FORMATO CSV PARA IMPORTAR A JIRA
 
 ```csv
-Summary,Issue Type,Priority,Severity,Component,Description,Steps to Reproduce,Expected Result,Actual Result
-"API endpoints retornan 401 bajo carga de 50 usuarios",Bug,High,Critical,API / Authentication,"El 49.96% de requests fallan bajo carga","1. Configurar K6 50 VUs 2. Ejecutar 5 min 3. Observar métricas","Tasa error < 5%","Tasa error 49.96%"
-"P95 tiempo respuesta supera 5 segundos",Bug,Medium,Major,Performance,"P95 es 5.51s login y 4.05s API","1. Ejecutar K6 load test 2. Medir p(95)","P95 < 3s","P95 = 5.51s"
-"Employee ID duplicado genera error 409",Bug,Medium,Minor,PIM / Employees,"No hay validación previa de ID","1. PIM > Add Employee 2. Ingresar ID existente 3. Save","Validar o generar ID único","Error 409"
-"Empleado sin Job Details no aparece en Directory",Bug,Low,Minor,Directory,"Requisito no comunicado al usuario","1. Crear empleado sin Job 2. Buscar en Directory","Aparecer o mostrar mensaje","No aparece"
-"Timeout en guardado bajo carga",Bug,Low,Minor,PIM / Performance,"Timeout ocasional de 30+ segundos","1. Tests paralelos 2. Crear empleado 3. Save","Guardar < 5s","Timeout 30+s"
+Summary,Issue Type,Priority,Severity,Component,Description
+"50% error rate bajo carga de 50 usuarios",Bug,High,Critical,API/Authentication,"El 49.96% de requests fallan con 401 bajo carga concurrente"
+"P95 tiempo respuesta supera 5 segundos",Bug,Medium,Major,Performance,"P95 es 5.51s para login, excede SLA de 3s"
+"GET empleado inexistente retorna 422",Bug,Low,Minor,API/PIM,"Debería retornar 404 para recursos no encontrados"
+"Employee ID duplicado genera error 409",Bug,Medium,Minor,PIM/Employees,"No hay validación previa de ID único"
+"Empleado sin Job Details no aparece en Directory",Bug,Low,Minor,Directory,"Requisito no comunicado al usuario"
+"Múltiples elementos con clase oxd-alert",Bug,Low,Trivial,UI/Login,"Dificulta automatización de pruebas"
 ```
 
 ---
 
-*Documento generado como parte del Reto Técnico AGILE TESTER - Banco Davivienda*
+## ✅ TESTS EXITOSOS (Para documentación)
+
+| Test | Endpoint | Status | Tiempo |
+|------|----------|--------|--------|
+| API-01: Lista empleados | GET /pim/employees | 200 ✅ | 757ms |
+| API-02: Crear empleado | POST /pim/employees | 200 ✅ | 425ms |
+| API-03: Buscar por ID | GET /pim/employees/{id} | 200 ✅ | 546ms |
+| API-04: Directorio | GET /directory/employees | 200 ✅ | 488ms |
+| API-05: Job Titles | GET /admin/job-titles | 200 ✅ | 414ms |
+| API-07: Headers | GET /pim/employees | 200 ✅ | 706ms |
+| NEG-02: Sin auth | GET /pim/employees | 401 ✅ | - |
+
+---
+
+## 📝 NOTAS IMPORTANTES
+
+1. **Servidor Demo:** Los bugs de performance están relacionados con el servidor demo público, no necesariamente reflejan el comportamiento en producción.
+
+2. **Workarounds:** Se implementaron soluciones temporales en el código de pruebas para continuar con la automatización.
+
+3. **Recomendación:** Ejecutar pruebas de performance en un ambiente controlado para obtener métricas más precisas.
+
+---
+
+*Documento actualizado: 8 de Marzo 2026*
+*Reto AGILE TESTER - Banco Davivienda*
