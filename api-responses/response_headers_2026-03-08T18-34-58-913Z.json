@@ -1,0 +1,12 @@
+{
+  "status": 200,
+  "headers": {
+    "server": "nginx",
+    "date": "Sun, 08 Mar 2026 18:35:00 GMT",
+    "content-type": "application/json",
+    "transfer-encoding": "chunked",
+    "connection": "keep-alive",
+    "cache-control": "no-cache, private",
+    "access-control-allow-origin": "in-app-marketing.orangehrm.com"
+  }
+}

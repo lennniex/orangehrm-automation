@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "responseTime": 3160,
+  "empNumber": 104,
+  "employee": {
+    "empNumber": 104,
+    "lastName": "010Z",
+    "firstName": "A8DCo",
+    "middleName": "4Ys",
+    "employeeId": "0312",
+    "terminationId": null
+  }
+}

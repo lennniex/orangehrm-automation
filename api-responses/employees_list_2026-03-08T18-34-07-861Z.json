@@ -1,0 +1,33 @@
+{
+  "status": 200,
+  "responseTime": 4775,
+  "contentType": "application/json",
+  "count": 10,
+  "total": 125,
+  "sample": [
+    {
+      "empNumber": 104,
+      "lastName": "010Z",
+      "firstName": "A8DCo",
+      "middleName": "4Ys",
+      "employeeId": "0312",
+      "terminationId": null
+    },
+    {
+      "empNumber": 128,
+      "lastName": "444444",
+      "firstName": "123445",
+      "middleName": "34",
+      "employeeId": "dfgsjsjdh",
+      "terminationId": null
+    },
+    {
+      "empNumber": 86,
+      "lastName": "5TlV",
+      "firstName": "99N75",
+      "middleName": "425",
+      "employeeId": "0295",
+      "terminationId": null
+    }
+  ]
+}

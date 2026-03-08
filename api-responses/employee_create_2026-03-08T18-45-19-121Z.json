@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "responseTime": 425,
+  "input": {
+    "firstName": "API518673",
+    "middleName": "Test",
+    "lastName": "Auto673",
+    "employeeId": "EMP518673"
+  },
+  "response": {
+    "data": {
+      "empNumber": 1095,
+      "lastName": "Auto673",
+      "firstName": "API518673",
+      "middleName": "Test",
+      "employeeId": "EMP518673",
+      "terminationId": null
+    },
+    "meta": [],
+    "rels": []
+  }
+}

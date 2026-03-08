@@ -1,0 +1,67 @@
+{
+  "status": 200,
+  "responseTime": 2405,
+  "count": 28,
+  "titles": [
+    {
+      "id": 22,
+      "title": "Account Assistant",
+      "description": "",
+      "note": "",
+      "jobSpecification": {
+        "id": null,
+        "filename": null,
+        "fileType": null,
+        "fileSize": null
+      }
+    },
+    {
+      "id": 28,
+      "title": "Automaton Tester",
+      "description": null,
+      "note": null,
+      "jobSpecification": {
+        "id": null,
+        "filename": null,
+        "fileType": null,
+        "fileSize": null
+      }
+    },
+    {
+      "id": 1,
+      "title": "Chief Executive Officer",
+      "description": "",
+      "note": "",
+      "jobSpecification": {
+        "id": null,
+        "filename": null,
+        "fileType": null,
+        "fileSize": null
+      }
+    },
+    {
+      "id": 2,
+      "title": "Chief Financial Officer",
+      "description": "",
+      "note": "",
+      "jobSpecification": {
+        "id": null,
+        "filename": null,
+        "fileType": null,
+        "fileSize": null
+      }
+    },
+    {
+      "id": 3,
+      "title": "Chief Technical Officer",
+      "description": "",
+      "note": "",
+      "jobSpecification": {
+        "id": null,
+        "filename": null,
+        "fileType": null,
+        "fileSize": null
+      }
+    }
+  ]
+}
